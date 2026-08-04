@@ -29,3 +29,27 @@ class Announcement(Base):
     archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "message": self.message,
+            "category": self.category,
+            "priority": self.priority,
+            "sort_order": self.sort_order,
+            "duration_seconds": self.duration_seconds,
+            "font_size": self.font_size,
+            "text_color": self.text_color,
+            "background_color": self.background_color,
+            "alignment": self.alignment,
+            "bold": self.bold,
+            "italic": self.italic,
+            "underline": self.underline,
+            "animation": self.animation,
+            "enabled": self.enabled,
+            "pinned": self.pinned,
+            "archived": self.archived,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
