@@ -1,0 +1,114 @@
+{% extends 'partials/base.html' %}
+{% block title %}Admin | {{ settings_map.get('company_name', 'Monitor Signage') }}{% endblock %}
+{% block body %}
+<div class="container-fluid py-4 admin-shell">
+  <div class="row g-4">
+    <aside class="col-12 col-xl-2">
+      <div class="card glass-panel h-100">
+        <div class="card-body">
+          <div class="small text-uppercase text-secondary mb-2">Control Center</div>
+          <h1 class="h4 mb-4">{{ settings_map.get('company_name', 'Monitor Signage') }}</h1>
+          <nav class="nav flex-column gap-2">
+            <a class="nav-link active" href="#dashboard">Dashboard</a>
+            <a class="nav-link" href="#media">Media</a>
+            <a class="nav-link" href="#announcements">Announcements</a>
+            <a class="nav-link" href="#templates">Templates</a>
+            <a class="nav-link" href="#history">History</a>
+            <a class="nav-link" href="#settings">Settings</a>
+          </nav>
+          <div class="mt-4 d-grid gap-2">
+            <a href="/display/media" class="btn btn-outline-info btn-sm" target="_blank">Open Media Display</a>
+            <a href="/display/live" class="btn btn-outline-info btn-sm" target="_blank">Open Live Display</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <main class="col-12 col-xl-10">
+      <section id="dashboard" class="mb-4">
+        <div class="row g-3">
+          <div class="col-md-6 col-xxl-3"><div class="card stat-card h-100"><div class="card-body"><div class="label">Current Media</div><div class="value">{{ dashboard.active_media.original_filename if dashboard.active_media else 'None' }}</div></div></div></div>
+          <div class="col-md-6 col-xxl-3"><div class="card stat-card h-100"><div class="card-body"><div class="label">Announcements</div><div class="value">{{ dashboard.active_announcements }}</div></div></div></div>
+          <div class="col-md-6 col-xxl-3"><div class="card stat-card h-100"><div class="card-body"><div class="label">WebSocket Clients</div><div class="value">{{ websocket_counts.get('media', 0) + websocket_counts.get('live', 0) }}</div></div></div></div>
+          <div class="col-md-6 col-xxl-3"><div class="card stat-card h-100"><div class="card-body"><div class="label">Uptime</div><div class="value" data-uptime="{{ dashboard.uptime_seconds }}">{{ dashboard.uptime_seconds }}s</div></div></div></div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-lg-8"><div class="card glass-panel h-100"><div class="card-header">System Overview</div><div class="card-body"><div class="row g-3"><div class="col-md-4"><div class="metric-label">Database</div><div class="metric-value">{{ dashboard.database_status }}</div></div><div class="col-md-4"><div class="metric-label">History Records</div><div class="metric-value">{{ dashboard.history_count }}</div></div><div class="col-md-4"><div class="metric-label">Backups</div><div class="metric-value">{{ dashboard.backup_count }}</div></div></div><hr><div class="row g-3"><div class="col-md-3"><div class="metric-label">DB Usage</div><div class="metric-value small">{{ dashboard.storage_usage.database }} bytes</div></div><div class="col-md-3"><div class="metric-label">Uploads</div><div class="metric-value small">{{ dashboard.storage_usage.uploads }} bytes</div></div><div class="col-md-3"><div class="metric-label">Logs</div><div class="metric-value small">{{ dashboard.storage_usage.logs }} bytes</div></div><div class="col-md-3"><div class="metric-label">Backups</div><div class="metric-value small">{{ dashboard.storage_usage.backups }} bytes</div></div></div></div></div></div>
+          <div class="col-lg-4"><div class="card glass-panel h-100"><div class="card-header">Recent Activity</div><div class="card-body activity-feed">{% for item in history %}<div class="activity-item"><div class="fw-semibold">{{ item.object_type|title }} · {{ item.action }}</div><div class="text-secondary small">{{ item.administrator }} · {{ item.created_at }}</div></div>{% else %}<div class="text-secondary">No history yet.</div>{% endfor %}</div></div></div>
+        </div>
+      </section>
+
+      <section id="media" class="mb-4">
+        <div class="card glass-panel">
+          <div class="card-header d-flex justify-content-between align-items-center"><span>Media Management</span><span class="badge text-bg-info">One active item</span></div>
+          <div class="card-body">
+            <form class="row g-3 mb-4" action="/api/media" method="post" enctype="multipart/form-data">
+              <div class="col-md-8"><input class="form-control" type="file" name="file" accept="application/pdf,video/mp4" required></div>
+              <div class="col-md-4 d-grid"><button class="btn btn-primary" type="submit">Upload Media</button></div>
+            </form>
+            <div class="table-responsive"><table class="table table-dark align-middle"><thead><tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Status</th><th>Actions</th></tr></thead><tbody>{% for item in media_items %}<tr><td>{{ item.original_filename }}</td><td>{{ item.file_type.value }}</td><td>{{ item.file_size }}</td><td>{{ item.created_at }}</td><td>{% if item.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td><td><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-light" href="/media/file/{{ item.id }}" target="_blank">Preview</a>{% if item.is_active %}<button class="btn btn-sm btn-warning js-post" data-url="/api/media/{{ item.id }}/deactivate">Deactivate</button>{% else %}<button class="btn btn-sm btn-success js-post" data-url="/api/media/{{ item.id }}/activate">Activate</button>{% endif %}<button class="btn btn-sm btn-danger js-delete" data-url="/api/media/{{ item.id }}">Delete</button></div></td></tr>{% else %}<tr><td colspan="6" class="text-center text-secondary">No media uploaded.</td></tr>{% endfor %}</tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="announcements" class="mb-4">
+        <div class="card glass-panel">
+          <div class="card-header">Announcement Management</div>
+          <div class="card-body">
+            <form class="row g-3 mb-4" action="/api/announcements" method="post" id="announcement-form">
+              <div class="col-md-4"><input class="form-control" type="text" name="title" placeholder="Title" required></div>
+              <div class="col-md-8"><input class="form-control" type="text" name="message" placeholder="Message" required></div>
+              <div class="col-md-2"><input class="form-control" type="text" name="category" placeholder="Category" value="General"></div>
+              <div class="col-md-2"><input class="form-control" type="number" name="priority" value="0"></div>
+              <div class="col-md-2"><input class="form-control" type="number" name="duration_seconds" value="10"></div>
+              <div class="col-md-2"><select class="form-select" name="font_size"><option>display-1</option><option>display-2</option><option selected>display-3</option><option>display-4</option><option>display-5</option></select></div>
+              <div class="col-md-2"><input class="form-control form-control-color" type="color" name="text_color" value="#ffffff"></div>
+              <div class="col-md-2"><input class="form-control form-control-color" type="color" name="background_color" value="#111827"></div>
+              <div class="col-md-2"><select class="form-select" name="alignment"><option value="start">Left</option><option value="center" selected>Center</option><option value="end">Right</option></select></div>
+              <div class="col-md-2"><select class="form-select" name="animation"><option value="fade">Fade</option><option value="slide">Slide</option><option value="zoom">Zoom</option></select></div>
+              <div class="col-md-6 d-flex flex-wrap gap-3 align-items-center"><div class="form-check"><input class="form-check-input" type="checkbox" name="bold" value="true" checked><label class="form-check-label">Bold</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="italic" value="true"><label class="form-check-label">Italic</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="underline" value="true"><label class="form-check-label">Underline</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="true" checked><label class="form-check-label">Enabled</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="pinned" value="true"><label class="form-check-label">Pinned</label></div></div>
+              <div class="col-md-12 d-grid"><button class="btn btn-primary" type="submit">Create Announcement</button></div>
+            </form>
+            <div class="row g-3" id="announcement-list">{% for item in announcements %}<div class="col-12" draggable="true" data-announcement-id="{{ item.id }}"><div class="card announcement-card"><div class="card-body"><div class="d-flex justify-content-between gap-3 flex-wrap"><div><div class="d-flex gap-2 align-items-center flex-wrap"><h3 class="h5 mb-0">{{ item.title }}</h3>{% if item.pinned %}<span class="badge text-bg-warning">Pinned</span>{% endif %}{% if item.archived %}<span class="badge text-bg-secondary">Archived</span>{% endif %}{% if item.enabled %}<span class="badge text-bg-success">Enabled</span>{% else %}<span class="badge text-bg-dark">Disabled</span>{% endif %}</div><div class="text-secondary small mt-1">{{ item.category }} · Priority {{ item.priority }} · {{ item.duration_seconds }}s · {{ item.animation }}</div><p class="mb-0 mt-2">{{ item.message }}</p></div><div class="d-flex flex-column gap-2"><button class="btn btn-sm btn-outline-light js-edit-announcement" data-announcement='{{ item|tojson|safe }}'>Edit</button><form action="/api/announcements/{{ item.id }}/duplicate" method="post"><button class="btn btn-sm btn-outline-info w-100">Duplicate</button></form><form action="/api/announcements/{{ item.id }}/delete" method="post"><button class="btn btn-sm btn-outline-danger w-100">Delete</button></form></div></div></div></div></div>{% else %}<div class="text-secondary">No announcements created.</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="templates" class="mb-4">
+        <div class="card glass-panel">
+          <div class="card-header">Template Library</div>
+          <div class="card-body">
+            <form class="row g-3 mb-4" action="/api/templates" method="post">
+              <div class="col-md-2"><input class="form-control" type="text" name="name" placeholder="Template name" required></div>
+              <div class="col-md-2"><input class="form-control" type="text" name="category" placeholder="Category" required></div>
+              <div class="col-md-2"><input class="form-control" type="text" name="title" placeholder="Title" required></div>
+              <div class="col-md-3"><input class="form-control" type="text" name="message" placeholder="Message" required></div>
+              <div class="col-md-1"><input class="form-control" type="number" name="duration_seconds" value="10"></div>
+              <div class="col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Save Template</button></div>
+              <input type="hidden" name="font_size" value="display-3"><input type="hidden" name="text_color" value="#FFFFFF"><input type="hidden" name="background_color" value="#111827"><input type="hidden" name="alignment" value="center"><input type="hidden" name="animation" value="fade">
+            </form>
+            <div class="row g-3">{% for item in templates %}<div class="col-md-6 col-xxl-4"><div class="card template-card h-100"><div class="card-body"><div class="small text-secondary text-uppercase mb-1">{{ item.category }}</div><h3 class="h5">{{ item.name }}</h3><p class="text-secondary">{{ item.message }}</p><button class="btn btn-sm btn-outline-info js-template-apply" data-template-id="{{ item.id }}">Insert into form</button></div></div></div>{% else %}<div class="text-secondary">No templates saved.</div>{% endfor %}</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="history" class="mb-4">
+        <div class="card glass-panel"><div class="card-header">History</div><div class="card-body"><div class="table-responsive"><table class="table table-dark table-sm"><thead><tr><th>Timestamp</th><th>Object</th><th>Action</th><th>Old</th><th>New</th><th>Admin</th></tr></thead><tbody>{% for item in history %}<tr><td>{{ item.created_at }}</td><td>{{ item.object_type }} #{{ item.object_id }}</td><td>{{ item.action }}</td><td class="history-cell">{{ item.old_value }}</td><td class="history-cell">{{ item.new_value }}</td><td>{{ item.administrator }}</td></tr>{% else %}<tr><td colspan="6" class="text-secondary text-center">No history records.</td></tr>{% endfor %}</tbody></table></div></div></div>
+      </section>
+
+      <section id="settings" class="mb-4">
+        <div class="row g-3">
+          <div class="col-lg-6"><div class="card glass-panel"><div class="card-header">Display Settings</div><div class="card-body"><div class="list-group list-group-flush">{% for key, value in settings_map.items() %}<div class="list-group-item bg-transparent text-light d-flex justify-content-between"><span>{{ key.replace('_', ' ')|title }}</span><span>{{ value }}</span></div>{% endfor %}</div></div></div></div>
+          <div class="col-lg-6"><div class="card glass-panel"><div class="card-header d-flex justify-content-between align-items-center"><span>Backups</span><form action="/api/backups/create" method="post"><button class="btn btn-sm btn-outline-primary">Manual Backup</button></form></div><div class="card-body"><div class="table-responsive"><table class="table table-dark table-sm"><thead><tr><th>File</th><th>Size</th><th>Created</th><th>Restore</th></tr></thead><tbody>{% for item in backups %}<tr><td>{{ item.filename }}</td><td>{{ item.file_size }}</td><td>{{ item.created_at }}</td><td><form action="/api/backups/{{ item.id }}/restore" method="post"><button class="btn btn-sm btn-outline-warning">Restore</button></form></td></tr>{% else %}<tr><td colspan="4" class="text-secondary text-center">No backups yet.</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal fade" id="editAnnouncementModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content bg-dark text-light"><form method="post" id="edit-announcement-form"><div class="modal-header"><h5 class="modal-title">Edit Announcement</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-3"><div class="col-md-4"><input class="form-control" type="text" name="title" required></div><div class="col-md-8"><input class="form-control" type="text" name="message" required></div><div class="col-md-2"><input class="form-control" type="text" name="category" required></div><div class="col-md-2"><input class="form-control" type="number" name="priority" required></div><div class="col-md-2"><input class="form-control" type="number" name="duration_seconds" required></div><div class="col-md-2"><select class="form-select" name="font_size"><option>display-1</option><option>display-2</option><option>display-3</option><option>display-4</option><option>display-5</option></select></div><div class="col-md-2"><input class="form-control form-control-color" type="color" name="text_color"></div><div class="col-md-2"><input class="form-control form-control-color" type="color" name="background_color"></div><div class="col-md-2"><select class="form-select" name="alignment"><option value="start">Left</option><option value="center">Center</option><option value="end">Right</option></select></div><div class="col-md-2"><select class="form-select" name="animation"><option value="fade">Fade</option><option value="slide">Slide</option><option value="zoom">Zoom</option></select></div><div class="col-md-6 d-flex flex-wrap gap-3 align-items-center"><div class="form-check"><input class="form-check-input" type="checkbox" name="bold" value="true"><label class="form-check-label">Bold</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="italic" value="true"><label class="form-check-label">Italic</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="underline" value="true"><label class="form-check-label">Underline</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="enabled" value="true"><label class="form-check-label">Enabled</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="pinned" value="true"><label class="form-check-label">Pinned</label></div><div class="form-check"><input class="form-check-input" type="checkbox" name="archived" value="true"><label class="form-check-label">Archived</label></div></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div></form></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', path='js/admin.js') }}"></script>
+{% endblock %}

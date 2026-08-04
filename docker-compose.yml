@@ -1,0 +1,14 @@
+services:
+  signage:
+    build: .
+    container_name: monitor-signage
+    restart: unless-stopped
+    ports:
+      - "7010:7010"
+    env_file:
+      - .env
+    volumes:
+      - ./database:/app/database
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./backups:/app/backups

@@ -1,0 +1,21 @@
+{% extends 'partials/base.html' %}
+{% block title %}Live Announcements{% endblock %}
+{% block body %}
+<div class="display-page live-display" data-transition="{{ settings_map.get('announcement_animation', 'fade') }}" data-speed="{{ settings_map.get('transition_speed', '800') }}">
+  <div class="live-brand">{{ settings_map.get('company_name', 'Monitor Signage') }}</div>
+  <div id="liveAnnouncementApp" data-announcements='{{ announcements|tojson|safe }}'>
+    {% if announcements %}
+      {% set item = announcements[0] %}
+      <div class="announcement-stage text-{{ item.alignment }} {{ item.font_size }}" style="color: {{ item.text_color }}; background: {{ item.background_color }};">
+        <div class="announcement-inner {% if item.bold %}fw-bold{% endif %} {% if item.italic %}fst-italic{% endif %} {% if item.underline %}text-decoration-underline{% endif %}">
+          <div class="announcement-title">{{ item.title }}</div>
+          <div class="announcement-message">{{ item.message }}</div>
+        </div>
+      </div>
+    {% else %}
+      <div class="empty-display">No live announcements available.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='js/display-live.js') }}"></script>{% endblock %}

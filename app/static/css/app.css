@@ -1,0 +1,152 @@
+:root {
+  --bg: #0b1220;
+  --bg-soft: #121b2d;
+  --panel: rgba(17, 24, 39, 0.92);
+  --panel-border: rgba(148, 163, 184, 0.18);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+body {
+  background: radial-gradient(circle at top, #172554 0%, var(--bg) 45%);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+.admin-shell .nav-link {
+  color: var(--text-muted);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.admin-shell .nav-link.active,
+.admin-shell .nav-link:hover {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--text-main);
+}
+
+.glass-panel,
+.stat-card,
+.announcement-card,
+.template-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.32);
+}
+
+.card-header {
+  background: rgba(15, 23, 42, 0.65);
+  border-bottom: 1px solid var(--panel-border);
+  font-weight: 600;
+}
+
+.stat-card .label,
+.metric-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-card .value,
+.metric-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.activity-feed {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.activity-item {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.activity-item:last-child { border-bottom: 0; }
+
+.announcement-card,
+.template-card { border-radius: 1rem; }
+.history-cell { max-width: 240px; word-break: break-word; }
+
+.display-page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #020617;
+}
+
+.media-display iframe,
+.media-display video,
+.media-display #mediaContainer {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+  background: #000;
+}
+
+.live-display {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  background: linear-gradient(180deg, #020617 0%, #111827 100%);
+}
+
+.live-brand {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+
+#liveAnnouncementApp,
+.announcement-stage,
+.empty-display {
+  width: 100%;
+  height: 100%;
+}
+
+.announcement-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  transition: all 0.8s ease;
+}
+
+.announcement-inner {
+  max-width: 1100px;
+}
+
+.announcement-title {
+  font-size: clamp(2rem, 4vw, 4rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.announcement-message {
+  font-size: clamp(2.5rem, 6vw, 6rem);
+  line-height: 1.1;
+  white-space: pre-wrap;
+}
+
+.empty-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.45);
+  font-size: 2rem;
+}
+
+.dragging { opacity: 0.45; }

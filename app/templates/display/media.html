@@ -1,0 +1,20 @@
+{% extends 'partials/base.html' %}
+{% block title %}Media Display{% endblock %}
+{% block body %}
+<div class="display-page media-display" data-rotation="{{ settings_map.get('pdf_rotation_interval', '12') }}">
+  {% if active_media %}
+    <div id="mediaContainer" data-media-id="{{ active_media.id }}" data-media-type="{{ active_media.file_type.value }}">
+      {% if active_media.file_type.value == 'pdf' %}
+        <iframe id="pdfFrame" src="/media/file/{{ active_media.id }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+      {% else %}
+        <video id="videoPlayer" autoplay muted loop playsinline>
+          <source src="/media/file/{{ active_media.id }}" type="video/mp4">
+        </video>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="empty-display">No active media selected.</div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='js/display-media.js') }}"></script>{% endblock %}
