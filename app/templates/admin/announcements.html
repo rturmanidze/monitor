@@ -1,0 +1,130 @@
+{% extends 'partials/base.html' %}
+{% block title %}Live Announcements · {{ settings_map.get('company_name', 'Monitor Signage') }}{% endblock %}
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
+{% block body %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">{{ settings_map.get('company_name', 'Monitor Signage') }}</div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" href="/admin/media">Media</a>
+      <a class="sidebar-link active" href="/admin/announcements">Live Announcements</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/display/media" target="_blank" class="sidebar-ext-link">↗ Media Display</a>
+      <a href="/display/live" target="_blank" class="sidebar-ext-link">↗ Live Display</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-announcements-layout">
+
+      <!-- Left: Editor + List -->
+      <div class="announcements-editor-panel">
+        <h2 class="page-title">Live Announcements</h2>
+
+        <!-- New announcement editor -->
+        <div class="editor-card" id="editor-card">
+          <div class="editor-meta-row">
+            <input class="input-title" type="text" id="ann-title" placeholder="Title…" maxlength="255">
+            <input class="input-duration" type="number" id="ann-duration" value="10" min="1" title="Duration (seconds)">
+            <span class="duration-label">sec</span>
+          </div>
+
+          <!-- Quill rich-text editor -->
+          <div id="quill-editor"></div>
+
+          <div class="editor-options-row">
+            <label class="opt-label">Align
+              <select id="ann-alignment" class="opt-select">
+                <option value="start">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="end">Right</option>
+              </select>
+            </label>
+            <label class="opt-label">Animation
+              <select id="ann-animation" class="opt-select">
+                <option value="fade">Fade</option>
+                <option value="slide">Slide</option>
+                <option value="zoom">Zoom</option>
+              </select>
+            </label>
+            <label class="opt-label">Background
+              <input type="color" id="ann-bg-color" value="#111827" class="opt-color">
+            </label>
+            <label class="opt-check"><input type="checkbox" id="ann-enabled" checked> Enabled</label>
+            <label class="opt-check"><input type="checkbox" id="ann-pinned"> Pinned</label>
+          </div>
+
+          <div class="editor-actions">
+            <button class="btn-primary" id="save-announcement-btn">Save Announcement</button>
+            <button class="btn-ghost" id="cancel-edit-btn" style="display:none">Cancel</button>
+          </div>
+
+          <!-- Hidden form for submit -->
+          <form id="announcement-submit-form" method="post" style="display:none">
+            <input type="hidden" name="title">
+            <input type="hidden" name="message">
+            <input type="hidden" name="category" value="General">
+            <input type="hidden" name="priority" value="0">
+            <input type="hidden" name="duration_seconds">
+            <input type="hidden" name="font_size" value="display-3">
+            <input type="hidden" name="text_color" value="#FFFFFF">
+            <input type="hidden" name="background_color">
+            <input type="hidden" name="alignment">
+            <input type="hidden" name="bold" value="false">
+            <input type="hidden" name="italic" value="false">
+            <input type="hidden" name="underline" value="false">
+            <input type="hidden" name="animation">
+            <input type="hidden" name="enabled" value="true">
+            <input type="hidden" name="pinned" value="false">
+            <input type="hidden" name="archived" value="false">
+          </form>
+        </div>
+
+        <!-- Announcement list -->
+        <div class="ann-list" id="announcement-list">
+          {% for item in announcements %}
+          <div class="ann-row" draggable="true" data-announcement-id="{{ item.id }}" data-announcement='{{ item.to_dict()|tojson|safe }}'>
+            <div class="ann-row-body">
+              <div class="ann-row-title">
+                {{ item.title }}
+                {% if item.pinned %}<span class="badge-pin">Pinned</span>{% endif %}
+                {% if not item.enabled %}<span class="badge-off">Disabled</span>{% endif %}
+              </div>
+              <div class="ann-row-preview">{{ item.message|striptags|truncate(80) }}</div>
+              <div class="ann-row-meta">{{ item.duration_seconds }}s · {{ item.animation }}</div>
+            </div>
+            <div class="ann-row-actions">
+              <button class="btn-ghost btn-sm js-edit-announcement">Edit</button>
+              <form action="/api/announcements/{{ item.id }}/delete" method="post" style="display:inline">
+                <button class="btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">No announcements yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Right: Live Preview -->
+      <div class="announcements-preview-panel">
+        <div class="preview-label">Live Preview</div>
+        <div class="monitor-frame">
+          <div class="monitor-screen">
+            <iframe id="live-preview-iframe" src="/display/live" title="Live Display Preview"></iframe>
+          </div>
+        </div>
+        <div class="preview-hint">Updates instantly as you type and save.</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+<script src="{{ url_for('static', path='js/admin-announcements.js') }}"></script>
+{% endblock %}

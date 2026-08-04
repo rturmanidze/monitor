@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
@@ -21,7 +20,6 @@ from app.services.audit_logger import write_log
 from app.services.backup_service import create_backup, restore_backup
 from app.services.files import remove_file, save_upload
 from app.services.history import log_history
-from app.services.metrics import collect_dashboard_metrics
 from app.services.settings_service import get_settings_map
 from app.websocket.manager import manager
 
@@ -32,31 +30,38 @@ templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / 
 
 @router.get("/", response_class=HTMLResponse)
 def root() -> RedirectResponse:
-    return RedirectResponse(url="/admin", status_code=302)
+    return RedirectResponse(url="/admin/media", status_code=302)
 
 
 @router.get("/admin", response_class=HTMLResponse)
-def admin(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
-    dashboard = collect_dashboard_metrics()
+def admin() -> RedirectResponse:
+    return RedirectResponse(url="/admin/media", status_code=302)
+
+
+@router.get("/admin/media", response_class=HTMLResponse)
+def admin_media(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
     media_items = db.query(Media).order_by(desc(Media.created_at)).all()
-    announcements = db.query(Announcement).order_by(asc(Announcement.sort_order), desc(Announcement.priority)).all()
-    templates_list = db.query(AnnouncementTemplate).order_by(AnnouncementTemplate.name).all()
-    history = db.query(HistoryRecord).order_by(desc(HistoryRecord.created_at)).limit(20).all()
-    backups = db.query(BackupRecord).order_by(desc(BackupRecord.created_at)).all()
-    websocket_counts = manager.counts()
+    active_media = next((m for m in media_items if m.is_active), None)
     return templates.TemplateResponse(
         request,
-        "admin/index.html",
+        "admin/media.html",
         {
-            "dashboard": dashboard,
             "media_items": media_items,
-            "announcements": announcements,
-            "templates": templates_list,
-            "history": history,
-            "backups": backups,
-            "websocket_counts": websocket_counts,
+            "active_media": active_media,
             "settings_map": get_settings_map(db),
-            "now": datetime.utcnow(),
+        },
+    )
+
+
+@router.get("/admin/announcements", response_class=HTMLResponse)
+def admin_announcements(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+    announcements = db.query(Announcement).order_by(asc(Announcement.sort_order), desc(Announcement.priority)).all()
+    return templates.TemplateResponse(
+        request,
+        "admin/announcements.html",
+        {
+            "announcements": announcements,
+            "settings_map": get_settings_map(db),
         },
     )
 
@@ -70,7 +75,8 @@ def display_media(request: Request, db: Session = Depends(get_db)) -> HTMLRespon
 @router.get("/display/live", response_class=HTMLResponse)
 def display_live(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
     announcements = db.query(Announcement).filter(Announcement.enabled.is_(True), Announcement.archived.is_(False)).order_by(Announcement.pinned.desc(), Announcement.sort_order.asc(), Announcement.priority.desc()).all()
-    return templates.TemplateResponse(request, "display/live.html", {"announcements": announcements, "settings_map": get_settings_map(db)})
+    announcements_data = [a.to_dict() for a in announcements]
+    return templates.TemplateResponse(request, "display/live.html", {"announcements": announcements, "announcements_data": announcements_data, "settings_map": get_settings_map(db)})
 
 
 @router.get("/media/file/{media_id}")
@@ -189,7 +195,7 @@ def create_announcement(
     db.refresh(announcement)
     import asyncio
     asyncio.run(manager.broadcast("live", "announcements-updated", {"announcement_id": announcement.id}))
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/announcements/{announcement_id}/update")
@@ -242,7 +248,7 @@ def update_announcement(
     db.commit()
     import asyncio
     asyncio.run(manager.broadcast("live", "announcements-updated", {"announcement_id": announcement.id}))
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/announcements/{announcement_id}/duplicate")
@@ -275,7 +281,7 @@ def duplicate_announcement(announcement_id: int, db: Session = Depends(get_db)) 
     db.commit()
     import asyncio
     asyncio.run(manager.broadcast("live", "announcements-updated", {"announcement_id": clone.id}))
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/announcements/{announcement_id}/delete")
@@ -289,7 +295,7 @@ def delete_announcement(announcement_id: int, db: Session = Depends(get_db)) -> 
     db.commit()
     import asyncio
     asyncio.run(manager.broadcast("live", "announcements-updated", {"announcement_id": announcement_id, "deleted": True}))
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/announcements/reorder")
@@ -339,7 +345,7 @@ def create_template(
     db.add(record)
     log_history(db, object_type="template", object_id="new", action="created", new_value={"name": name})
     db.commit()
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/templates/{template_id}/apply")
@@ -384,7 +390,7 @@ def manual_backup(db: Session = Depends(get_db)) -> RedirectResponse:
     if not source.exists():
         raise HTTPException(status_code=404, detail="Database file not found")
     create_backup(db, source)
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)
 
 
 @router.post("/api/backups/{backup_id}/restore")
@@ -394,4 +400,4 @@ def restore_backup_route(backup_id: int, db: Session = Depends(get_db)) -> Redir
         raise HTTPException(status_code=404, detail="Backup not found")
     source = Path(settings.database_dir) / "monitor.db"
     restore_backup(db, backup, source)
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/announcements", status_code=303)

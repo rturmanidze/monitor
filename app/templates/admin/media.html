@@ -1,0 +1,85 @@
+{% extends 'partials/base.html' %}
+{% block title %}Media · {{ settings_map.get('company_name', 'Monitor Signage') }}{% endblock %}
+{% block body %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">{{ settings_map.get('company_name', 'Monitor Signage') }}</div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" href="/admin/media">Media</a>
+      <a class="sidebar-link" href="/admin/announcements">Live Announcements</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/display/media" target="_blank" class="sidebar-ext-link">↗ Media Display</a>
+      <a href="/display/live" target="_blank" class="sidebar-ext-link">↗ Live Display</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-media-layout">
+
+      <!-- Left: Management -->
+      <div class="media-manager">
+        <h2 class="page-title">Media</h2>
+
+        <div class="upload-card">
+          <form id="upload-form" action="/api/media" method="post" enctype="multipart/form-data">
+            <label class="upload-label" for="media-file-input">
+              <span class="upload-icon">⬆</span>
+              <span class="upload-text">Choose PDF or MP4 file</span>
+              <input id="media-file-input" type="file" name="file" accept="application/pdf,video/mp4" required>
+            </label>
+            <button class="btn-primary" type="submit">Upload</button>
+          </form>
+        </div>
+
+        <div class="media-list">
+          {% for item in media_items %}
+          <div class="media-row {% if item.is_active %}media-row--active{% endif %}" data-media-id="{{ item.id }}">
+            <div class="media-row-info">
+              <div class="media-row-name">{{ item.original_filename }}</div>
+              <div class="media-row-meta">{{ item.file_type.value|upper }} &middot; {{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            <div class="media-row-actions">
+              {% if item.is_active %}
+                <span class="badge-active">Active</span>
+                <button class="btn-ghost js-post" data-url="/api/media/{{ item.id }}/deactivate">Deactivate</button>
+              {% else %}
+                <button class="btn-secondary js-post" data-url="/api/media/{{ item.id }}/activate">Activate</button>
+              {% endif %}
+              <button class="btn-danger js-delete" data-url="/api/media/{{ item.id }}">Delete</button>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">No media uploaded yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Right: Live Preview -->
+      <div class="media-preview-panel">
+        <div class="preview-label">Live Preview</div>
+        <div class="monitor-frame">
+          <div class="monitor-screen" id="media-preview-screen">
+            <iframe id="media-preview-iframe" src="/display/media" title="Media Display Preview"></iframe>
+          </div>
+        </div>
+        {% if active_media %}
+        <div class="preview-info">
+          <div class="preview-info-row"><span>File</span><span>{{ active_media.original_filename }}</span></div>
+          <div class="preview-info-row"><span>Type</span><span>{{ active_media.file_type.value|upper }}</span></div>
+          <div class="preview-info-row"><span>Uploaded</span><span>{{ active_media.created_at.strftime('%Y-%m-%d %H:%M') }}</span></div>
+        </div>
+        {% else %}
+        <div class="preview-info">
+          <div class="empty-state">No active media.</div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', path='js/admin-media.js') }}"></script>
+{% endblock %}
