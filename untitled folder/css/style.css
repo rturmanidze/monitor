@@ -1,0 +1,159 @@
+/* =========================================================
+   SIGNAGE CONSOLE — shared design tokens
+   Theme: broadcast patch-panel / control room
+   ========================================================= */
+
+   :root{
+    --bg:            #14171A;
+    --panel:         #1C2024;
+    --panel-raised:  #23282D;
+    --line:          #2E3438;
+    --text:          #F2F4F5;
+    --text-dim:      #8B959C;
+    --text-faint:    #565F65;
+  
+    --live:          #3ED598;   /* signal green — on air   */
+    --live-dim:      #1F5C43;
+    --standby:       #F2A93B;   /* amber — idle / standby  */
+    --standby-dim:   #6B4E1B;
+    --danger:        #E5484D;
+  
+    --radius:        6px;
+    --radius-lg:     10px;
+  
+    --font-display:  'Oswald', 'Arial Narrow', sans-serif;
+    --font-body:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:     'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  
+  *, *::before, *::after{ box-sizing: border-box; }
+  
+  html, body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  
+  body{ min-height:100vh; }
+  
+  a{ color:inherit; }
+  
+  ::selection{ background:var(--live-dim); color:var(--text); }
+  
+  /* focus visibility kept intentional, never removed */
+  :focus-visible{
+    outline:2px solid var(--live);
+    outline-offset:2px;
+  }
+  
+  /* ---------- utility bits shared across pages ---------- */
+  
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  
+  .hairline{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:0;
+  }
+  
+  /* tally / channel LED — the signature element.
+     green pulse = live, amber steady = standby, grey = idle/empty */
+  .tally{
+    --tally-color: var(--text-faint);
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--tally-color);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--tally-color) 18%, transparent);
+    flex:none;
+  }
+  .tally.is-live{
+    --tally-color: var(--live);
+    animation:tally-pulse 1.8s ease-in-out infinite;
+  }
+  .tally.is-standby{ --tally-color: var(--standby); }
+  
+  @keyframes tally-pulse{
+    0%,100%{ box-shadow:0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent); }
+    50%{ box-shadow:0 0 0 6px color-mix(in srgb, var(--live) 8%, transparent); }
+  }
+  
+  @media (prefers-reduced-motion: reduce){
+    .tally.is-live{ animation:none; }
+  }
+  
+  button{
+    font-family:var(--font-body);
+    cursor:pointer;
+  }
+  
+  .btn{
+    appearance:none;
+    border:1px solid var(--line);
+    background:var(--panel-raised);
+    color:var(--text);
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.01em;
+    padding:10px 16px;
+    border-radius:var(--radius);
+    transition:border-color .15s ease, background .15s ease, transform .05s ease;
+  }
+  .btn:hover{ border-color:var(--text-faint); background:#282e33; }
+  .btn:active{ transform:translateY(1px); }
+  
+  .btn-primary{
+    background:var(--live);
+    border-color:var(--live);
+    color:#0B1410;
+  }
+  .btn-primary:hover{ background:#4fe0a8; border-color:#4fe0a8; }
+  
+  .btn-ghost{
+    background:transparent;
+  }
+  
+  .btn-danger{
+    color:#ffb4b6;
+    border-color:color-mix(in srgb, var(--danger) 40%, var(--line));
+  }
+  .btn-danger:hover{ border-color:var(--danger); background:color-mix(in srgb, var(--danger) 10%, var(--panel-raised)); }
+  
+  .btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+  
+  /* ---------- protocol warning banner (shown if opened via file://) ---------- */
+  .proto-warning{
+    position:fixed; inset:0; z-index:999;
+    background:rgba(10,11,13,.94);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    font-family:var(--font-body);
+  }
+  .proto-warning .box{
+    max-width:560px;
+    background:var(--panel);
+    border:1px solid var(--danger);
+    border-radius:var(--radius-lg);
+    padding:28px;
+  }
+  .proto-warning h2{
+    font-family:var(--font-display); font-size:18px; margin:0 0 10px;
+    color:#ffb4b6; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .proto-warning p{ margin:0 0 10px; font-size:13.5px; line-height:1.6; color:var(--text-dim); }
+  .proto-warning code{
+    font-family:var(--font-mono); font-size:12.5px; background:var(--panel-raised);
+    padding:2px 7px; border-radius:4px; color:var(--live); display:inline-block; margin:2px 0;
+  }
+  .proto-warning ol{ padding-left:20px; margin:10px 0; color:var(--text-dim); font-size:13px; line-height:1.8; }

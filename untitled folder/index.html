@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signage Console — Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(62,213,152,.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(242,169,59,.05), transparent 40%),
+      var(--bg);
+    padding:40px 20px;
+  }
+  .rack{
+    width:100%; max-width:920px;
+  }
+  .rack-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:28px; gap:16px; flex-wrap:wrap;
+  }
+  .rack-head h1{
+    font-family:var(--font-display);
+    font-size:26px; font-weight:600; letter-spacing:.02em;
+    margin:0; text-transform:uppercase;
+  }
+  .rack-head h1 span{ color:var(--live); }
+  .rack-sub{ color:var(--text-dim); font-size:13px; max-width:34ch; text-align:right; }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+  @media (max-width:760px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:22px;
+    display:flex; flex-direction:column; gap:14px;
+    text-decoration:none;
+    position:relative;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .card:hover{ border-color:var(--text-faint); transform:translateY(-2px); }
+
+  .card .chan{
+    font-family:var(--font-mono);
+    font-size:11px; letter-spacing:.14em; color:var(--text-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h2{
+    font-family:var(--font-display);
+    font-size:19px; font-weight:600; margin:0; letter-spacing:.01em;
+  }
+  .card p{ margin:0; font-size:13px; color:var(--text-dim); line-height:1.5; }
+  .card .go{
+    margin-top:auto; font-size:12px; font-weight:600; color:var(--live);
+    display:flex; align-items:center; gap:6px;
+  }
+
+  .setup{
+    margin-top:28px;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+  .setup h3{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--text-dim); margin:0 0 12px;
+  }
+  .setup ol{
+    margin:0; padding-left:20px; color:var(--text-dim); font-size:13.5px; line-height:1.9;
+  }
+  .setup li b{ color:var(--text); font-weight:600; }
+  .setup code{
+    font-family:var(--font-mono); font-size:12px;
+    background:var(--panel-raised); padding:1px 6px; border-radius:4px;
+    color:var(--text);
+  }
+</style>
+</head>
+<body>
+
+<div class="rack">
+  <div class="rack-head">
+    <h1>Signage<span>·</span>Console</h1>
+    <div class="rack-sub">Local two-output signage rig — one admin panel, two monitor feeds.</div>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="admin.html">
+      <div class="chan"><span class="tally is-live"></span> ADMIN</div>
+      <h2>Console</h2>
+      <p>Upload the document for Output 1 and write the live message for Output 2.</p>
+      <div class="go">Open console →</div>
+    </a>
+
+    <a class="card" href="display-pdf.html" target="_blank">
+      <div class="chan"><span class="tally is-standby"></span> CH.01</div>
+      <h2>Document Output</h2>
+      <p>Fullscreen PDF feed. Open this on the first monitor.</p>
+      <div class="go">Open output 1 →</div>
+    </a>
+
+    <a class="card" href="display-writing.html" target="_blank">
+      <div class="chan"><span class="tally is-standby"></span> CH.02</div>
+      <h2>Message Output</h2>
+      <p>Fullscreen live-text feed. Open this on the second monitor.</p>
+      <div class="go">Open output 2 →</div>
+    </a>
+  </div>
+
+  <div class="setup">
+    <h3>Setup, once per machine</h3>
+    <ol>
+      <li><b>Extend your desktop</b> across both monitors (not "duplicate").</li>
+      <li>Open <b>Output 1</b> and <b>Output 2</b> above, each in its own browser window.</li>
+      <li>Drag each window onto its monitor, then press <code>F11</code> (or the on-screen fullscreen button) to go fullscreen.</li>
+      <li>Keep the <b>Console</b> open on your own laptop or a third window — changes push to both outputs instantly.</li>
+    </ol>
+  </div>
+</div>
+
+</body>
