@@ -20,4 +20,4 @@ RUN mkdir -p /app/database /app/uploads /app/logs /app/backups
 
 EXPOSE 7010
 
-CMD ["bash", "-lc", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 7010"]
+CMD ["bash", "-lc", "PYTHONPATH=/app alembic upgrade head && PYTHONPATH=/app uvicorn app.main:app --host 0.0.0.0 --port 7010"]
